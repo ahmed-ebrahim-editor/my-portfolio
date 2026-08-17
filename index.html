@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ahmed Ebrahim — Video Editor &amp; AI Video Creator</title>
+<meta name="description" content="Ahmed Ebrahim — Video Editor &amp; AI Content Creator. Cinematic editing, motion graphics and AI-powered video production.">
+
+<!-- Google Fonts: Space Grotesk (display), Inter (body/EN), Cairo (Arabic) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ==========================================================================
+   0. DESIGN TOKENS
+   ========================================================================== */
+:root{
+  --bg: #0a0a0c;
+  --bg-elevated: #111114;
+  --bg-card: #17171b;
+  --bg-card-hover: #1c1c22;
+  --line: rgba(157,78,221,0.14);
+  --line-strong: rgba(157,78,221,0.35);
+  --purple: #8A2BE2;
+  --purple-light: #9d4edd;
+  --purple-soft: rgba(157,78,221,0.12);
+  --purple-glow: rgba(157,78,221,0.55);
+  --text: #f2f0f6;
+  --text-dim: #a7a4b3;
+  --text-faint: #67636f;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-ar: 'Cairo', sans-serif;
+  --ease: cubic-bezier(.16,.84,.44,1);
+  --container: 1180px;
+}
+
+/* ==========================================================================
+   1. RESET & BASE
+   ========================================================================== */
+*,*::before,*::after{ box-sizing: border-box; margin:0; padding:0; }
+html{ scroll-behavior: smooth; }
+body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+html[dir="rtl"] body, body.lang-ar{ font-family: var(--font-ar); }
+img{ max-width:100%; display:block; }
+a{ color:inherit; text-decoration:none; }
+ul{ list-style:none; }
+button{ font-family:inherit; cursor:pointer; border:none; background:none; color:inherit; }
+h1,h2,h3,h4{ font-family: var(--font-display); font-weight:600; letter-spacing:-0.01em; }
+body.lang-ar h1, body.lang-ar h2, body.lang-ar h3, body.lang-ar h4{ font-family: var(--font-ar); font-weight:700; }
+.container{ max-width: var(--container); margin:0 auto; padding: 0 24px; }
+section{ position: relative; padding: 120px 0; }
+::selection{ background: var(--purple); color:#fff; }
+
+/* Visible keyboard focus (accessibility floor) */
+a:focus-visible, button:focus-visible, input:focus-visible{
+  outline: 2px solid var(--purple-light);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior:auto !important; }
+}
+
+/* ==========================================================================
+   2. SIGNATURE ATMOSPHERE — cinematic grain + aurora glow
+   ========================================================================== */
+.grain{
+  position: fixed; inset:0; z-index: 2; pointer-events:none;
+  opacity: 0.05; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+.aurora{
+  position: fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+}
+.aurora span{
+  position:absolute; border-radius:50%;
+  filter: blur(120px);
+  opacity:.35;
+  background: radial-gradient(circle, var(--purple-glow), transparent 70%);
+  animation: drift 22s ease-in-out infinite alternate;
+}
+.aurora span:nth-child(1){ width:520px; height:520px; top:-10%; left:-8%; }
+.aurora span:nth-child(2){ width:460px; height:460px; top:30%; right:-10%; animation-delay: -8s; background: radial-gradient(circle, rgba(138,43,226,.45), transparent 70%);}
+.aurora span:nth-child(3){ width:400px; height:400px; bottom:-10%; left:30%; animation-delay: -14s; }
+@keyframes drift{
+  0%{ transform: translate(0,0) scale(1); }
+  100%{ transform: translate(40px,-30px) scale(1.15); }
+}
+
+/* ==========================================================================
+   3. NAVIGATION
+   ========================================================================== */
+.navbar{
+  position: fixed; top:0; left:0; right:0; z-index: 100;
+  padding: 18px 0;
+  transition: all .35s var(--ease);
+  border-bottom: 1px solid transparent;
+}
+.navbar.scrolled{
+  background: rgba(10,10,12,0.72);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+.nav-inner{ display:flex; align-items:center; justify-content:space-between; }
+.brand{
+  font-family: var(--font-display); font-weight:700; font-size: 1.15rem;
+  letter-spacing: 0.04em;
+}
+.brand span{ color: var(--purple-light); }
+.nav-links{ display:flex; align-items:center; gap: 40px; }
+.nav-links a{
+  position:relative; font-size: .92rem; color: var(--text-dim); font-weight:500;
+  padding: 4px 0; transition: color .25s var(--ease);
+}
+.nav-links a::after{
+  content:''; position:absolute; left:0; bottom:-4px; height:1px; width:0;
+  background: var(--purple-light); transition: width .3s var(--ease);
+}
+.nav-links a:hover, .nav-links a.active{ color: var(--text); }
+.nav-links a:hover::after, .nav-links a.active::after{ width:100%; }
+
+.nav-actions{ display:flex; align-items:center; gap:14px; }
+.lang-toggle{
+  border:1px solid var(--line-strong); border-radius: 999px;
+  padding: 7px 16px; font-size: .8rem; font-weight:600; letter-spacing:.03em;
+  color: var(--text); background: var(--purple-soft);
+  transition: all .25s var(--ease);
+}
+.lang-toggle:hover{ background: var(--purple); border-color: var(--purple); box-shadow: 0 0 22px var(--purple-glow); }
+
+.nav-burger{ display:none; flex-direction:column; gap:5px; width:26px; }
+.nav-burger span{ height:2px; background: var(--text); border-radius:2px; transition: all .3s var(--ease); }
+
+/* ==========================================================================
+   4. HERO
+   ========================================================================== */
+.hero{
+  min-height: 100vh; display:flex; align-items:center; position:relative;
+  padding-top: 120px;
+}
+.hero-inner{ position:relative; z-index:1; max-width: 820px; }
+.eyebrow{
+  display:inline-flex; align-items:center; gap:8px;
+  font-size: .78rem; letter-spacing:.14em; text-transform:uppercase;
+  color: var(--purple-light); font-weight:600; margin-bottom: 22px;
+  border: 1px solid var(--line-strong); padding: 7px 14px; border-radius: 999px;
+  background: var(--purple-soft);
+}
+.eyebrow i{ font-size:.7rem; }
+.hero h1{
+  font-size: clamp(2.6rem, 6vw, 4.6rem);
+  line-height: 1.05;
+  margin-bottom: 22px;
+}
+.hero h1 .accent{
+  background: linear-gradient(120deg, var(--purple-light), #c77dff 60%, var(--purple));
+  -webkit-background-clip: text; background-clip:text; color:transparent;
+}
+.hero .subhead{
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  color: var(--text-dim); margin-bottom: 26px; font-weight:400; max-width: 640px;
+}
+.hero .bio{
+  font-size: 1rem; color: var(--text-dim); max-width: 620px; margin-bottom: 42px;
+  line-height:1.85;
+}
+.cta-row{ display:flex; gap:18px; flex-wrap:wrap; }
+.btn{
+  display:inline-flex; align-items:center; gap:10px;
+  padding: 15px 30px; border-radius: 10px; font-weight:600; font-size:.95rem;
+  transition: all .3s var(--ease); position:relative; overflow:hidden;
+}
+.btn-primary{
+  background: linear-gradient(135deg, var(--purple), var(--purple-light));
+  color:#fff; box-shadow: 0 0 0 rgba(157,78,221,0);
+}
+.btn-primary:hover{ box-shadow: 0 8px 40px -6px var(--purple-glow); transform: translateY(-2px); }
+.btn-outline{
+  border: 1px solid var(--line-strong); color: var(--text); background: rgba(255,255,255,0.02);
+}
+.btn-outline:hover{ border-color: var(--purple-light); background: var(--purple-soft); transform: translateY(-2px); }
+
+.scroll-hint{
+  position:absolute; bottom: 34px; left:50%; transform:translateX(-50%);
+  display:flex; flex-direction:column; align-items:center; gap:8px;
+  color: var(--text-faint); font-size:.72rem; letter-spacing:.12em; text-transform:uppercase;
+}
+.scroll-hint .line{ width:1px; height:34px; background: linear-gradient(var(--purple-light), transparent); animation: scrolldown 1.8s infinite; }
+@keyframes scrolldown{ 0%{opacity:0; transform:scaleY(0); transform-origin:top;} 40%{opacity:1; transform:scaleY(1); transform-origin:top;} 60%{opacity:1; transform:scaleY(1); transform-origin:bottom;} 100%{opacity:0; transform:scaleY(0); transform-origin:bottom;} }
+
+/* ==========================================================================
+   5. SECTION HEADERS
+   ========================================================================== */
+.section-head{ margin-bottom: 56px; max-width: 640px; }
+.section-head .tag{
+  font-size:.78rem; text-transform:uppercase; letter-spacing:.16em; color: var(--purple-light);
+  font-weight:600; margin-bottom:14px; display:block;
+}
+.section-head h2{ font-size: clamp(2rem, 3.6vw, 2.8rem); margin-bottom: 14px; }
+.section-head p{ color: var(--text-dim); font-size:1.02rem; }
+
+/* Reveal-on-scroll */
+.reveal{ opacity:0; transform: translateY(28px); transition: opacity .8s var(--ease), transform .8s var(--ease); }
+.reveal.in{ opacity:1; transform: translateY(0); }
+
+/* ==========================================================================
+   6. PORTFOLIO
+   ========================================================================== */
+.filters{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom: 44px; }
+.filter-btn{
+  padding: 10px 20px; border-radius: 999px; font-size:.86rem; font-weight:500;
+  border: 1px solid var(--line); color: var(--text-dim);
+  transition: all .25s var(--ease);
+}
+.filter-btn:hover{ color: var(--text); border-color: var(--line-strong); }
+.filter-btn.active{
+  background: var(--purple); color:#fff; border-color: var(--purple);
+  box-shadow: 0 0 24px -4px var(--purple-glow);
+}
+
+.video-grid{
+  display:grid; grid-template-columns: repeat(3, 1fr); gap: 26px;
+}
+.video-card{
+  position:relative; border-radius: 16px; overflow:hidden; cursor:pointer;
+  background: var(--bg-card); border: 1px solid var(--line);
+  transition: transform .4s var(--ease), border-color .4s var(--ease);
+  opacity:1; transform: scale(1);
+}
+.video-card.hidden{ display:none; }
+.video-card::before{
+  /* animated neon trace border on hover */
+  content:''; position:absolute; inset:-1px; border-radius:16px; padding:1px;
+  background: conic-gradient(from 0deg, var(--purple-light), transparent 25%, transparent 75%, var(--purple-light));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity:0; transition: opacity .4s var(--ease);
+  animation: spin 3.5s linear infinite paused;
+  pointer-events:none;
+}
+.video-card:hover{ transform: translateY(-6px); border-color: transparent; }
+.video-card:hover::before{ opacity:1; animation-play-state: running; }
+@keyframes spin{ to{ transform: rotate(360deg); } }
+
+.thumb-wrap{ position:relative; aspect-ratio: 16/9; overflow:hidden; background:#0d0d10; }
+.thumb-wrap img{ width:100%; height:100%; object-fit:cover; transition: transform .6s var(--ease), filter .6s var(--ease); }
+.video-card:hover .thumb-wrap img{ transform: scale(1.08); filter: brightness(.55); }
+.play-btn{
+  position:absolute; inset:0; margin:auto; width:56px; height:56px; border-radius:50%;
+  background: rgba(255,255,255,0.08); backdrop-filter: blur(6px);
+  border:1px solid rgba(255,255,255,.25);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-size:1.1rem;
+  opacity:0; transform: scale(.7);
+  transition: all .35s var(--ease);
+}
+.video-card:hover .play-btn{ opacity:1; transform: scale(1); box-shadow: 0 0 30px var(--purple-glow); background: var(--purple); }
+.badge{
+  position:absolute; top:12px; inset-inline-start:12px;
+  font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+  padding: 5px 11px; border-radius: 999px;
+  background: rgba(10,10,12,0.75); border:1px solid var(--line-strong); color: var(--purple-light);
+  backdrop-filter: blur(6px);
+}
+.card-info{ padding: 18px 20px 22px; }
+.card-info h4{ font-size: 1.02rem; font-weight:600; margin-bottom:4px; }
+.card-info span{ font-size:.82rem; color: var(--text-faint); }
+
+/* Modal / Lightbox */
+.modal-overlay{
+  position: fixed; inset:0; background: rgba(6,6,8,0.9); backdrop-filter: blur(10px);
+  z-index: 300; display:flex; align-items:center; justify-content:center;
+  opacity:0; visibility:hidden; transition: opacity .35s var(--ease);
+  padding: 24px;
+}
+.modal-overlay.open{ opacity:1; visibility:visible; }
+.modal-box{
+  width:100%; max-width: 920px; position:relative;
+  transform: scale(.92); transition: transform .35s var(--ease);
+}
+.modal-overlay.open .modal-box{ transform: scale(1); }
+.modal-frame-wrap{ position:relative; aspect-ratio:16/9; border-radius:14px; overflow:hidden; border:1px solid var(--line-strong); box-shadow: 0 0 80px -10px var(--purple-glow); }
+.modal-frame-wrap iframe{ width:100%; height:100%; border:0; }
+.modal-close{
+  position:absolute; top:-48px; inset-inline-end:0; width:38px; height:38px; border-radius:50%;
+  border:1px solid var(--line-strong); color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:1rem; transition: all .25s var(--ease); background: var(--bg-card);
+}
+.modal-close:hover{ background: var(--purple); border-color: var(--purple); }
+
+/* ==========================================================================
+   7. SERVICES
+   ========================================================================== */
+.services-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 22px; }
+.service-card{
+  padding: 34px 26px; border-radius: 16px; background: var(--bg-card);
+  border: 1px solid var(--line); transition: all .4s var(--ease); position:relative;
+}
+.service-card:hover{
+  border-color: var(--line-strong); background: var(--bg-card-hover);
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px -20px rgba(0,0,0,.6), 0 0 40px -18px var(--purple-glow);
+}
+.service-icon{
+  width: 52px; height:52px; border-radius: 12px; margin-bottom: 22px;
+  background: var(--purple-soft); border:1px solid var(--line-strong);
+  display:flex; align-items:center; justify-content:center; font-size:1.3rem; color: var(--purple-light);
+  transition: all .4s var(--ease);
+}
+.service-card:hover .service-icon{ background: var(--purple); color:#fff; box-shadow: 0 0 24px var(--purple-glow); }
+.service-card h3{ font-size: 1.08rem; margin-bottom: 10px; }
+.service-card p{ font-size:.9rem; color: var(--text-dim); line-height:1.7; }
+
+/* ==========================================================================
+   8. CONTACT / CTA
+   ========================================================================== */
+.contact-section{ text-align:center; }
+.contact-box{
+  max-width: 760px; margin: 0 auto; padding: 70px 40px; border-radius: 26px;
+  background: linear-gradient(180deg, var(--bg-card), var(--bg-elevated));
+  border: 1px solid var(--line-strong); position:relative; overflow:hidden;
+}
+.contact-box::before{
+  content:''; position:absolute; width:340px; height:340px; border-radius:50%;
+  background: radial-gradient(circle, var(--purple-glow), transparent 70%);
+  filter: blur(80px); top:-120px; left:50%; transform:translateX(-50%); opacity:.5;
+}
+.contact-box h2{ font-size: clamp(1.8rem, 3.4vw, 2.4rem); margin-bottom:16px; position:relative; }
+.contact-box p{ color: var(--text-dim); margin-bottom: 34px; position:relative; max-width:520px; margin-inline:auto; }
+.btn-whatsapp{
+  position:relative; display:inline-flex; align-items:center; gap:12px;
+  padding: 18px 38px; border-radius: 12px; font-weight:700; font-size:1.02rem;
+  background: linear-gradient(135deg, #25D366, #128C4A); color:#fff;
+  box-shadow: 0 0 40px -8px rgba(37,211,102,.55);
+  transition: all .3s var(--ease);
+}
+.btn-whatsapp:hover{ transform: translateY(-3px); box-shadow: 0 12px 50px -8px rgba(37,211,102,.75); }
+.btn-whatsapp i{ font-size:1.3rem; }
+
+/* Footer */
+.footer{
+  padding: 46px 0 34px; border-top: 1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:20px;
+}
+.footer .f-brand{ font-family: var(--font-display); font-weight:700; color: var(--text-dim); font-size:.95rem; }
+.footer .f-brand span{ color: var(--purple-light); }
+.social-links{ display:flex; gap:14px; }
+.social-links a{
+  width:40px; height:40px; border-radius:50%; border:1px solid var(--line-strong);
+  display:flex; align-items:center; justify-content:center; color: var(--text-dim);
+  transition: all .3s var(--ease);
+}
+.social-links a:hover{ background: var(--purple); color:#fff; border-color: var(--purple); box-shadow: 0 0 20px var(--purple-glow); transform: translateY(-3px); }
+.footer .copyright{ width:100%; text-align:center; font-size:.78rem; color: var(--text-faint); margin-top: 10px; }
+
+/* ==========================================================================
+   9. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 980px){
+  .services-grid{ grid-template-columns: repeat(2, 1fr); }
+  .video-grid{ grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 860px){
+  .nav-links{
+    position: fixed; top:0; inset-inline-end:0; height:100vh; width: 74%; max-width:320px;
+    background: rgba(10,10,12,0.97); backdrop-filter: blur(20px);
+    flex-direction:column; align-items:flex-start; justify-content:center; gap:30px;
+    padding: 40px; transform: translateX(110%); transition: transform .4s var(--ease);
+    border-inline-start: 1px solid var(--line-strong); z-index:99;
+  }
+  html[dir="rtl"] .nav-links{ transform: translateX(-110%); }
+  .nav-links.open{ transform: translateX(0); }
+  .nav-links a{ font-size:1.1rem; }
+  .nav-burger{ display:flex; z-index:101; }
+  .nav-burger.open span:nth-child(1){ transform: translateY(7px) rotate(45deg); }
+  .nav-burger.open span:nth-child(2){ opacity:0; }
+  .nav-burger.open span:nth-child(3){ transform: translateY(-7px) rotate(-45deg); }
+}
+@media (max-width: 700px){
+  section{ padding: 84px 0; }
+  .services-grid{ grid-template-columns: 1fr; }
+  .video-grid{ grid-template-columns: 1fr; }
+  .contact-box{ padding: 48px 22px; }
+  .footer{ justify-content:center; text-align:center; }
+}
+</style>
+</head>
+<body>
+
+<!-- Atmosphere layers -->
+<div class="aurora"><span></span><span></span><span></span></div>
+<div class="grain"></div>
+
+<!-- ============================== NAVBAR ============================== -->
+<header class="navbar" id="navbar">
+  <div class="container nav-inner">
+    <a href="#home" class="brand">AHMED <span>EBRAHIM</span></a>
+
+    <nav class="nav-links" id="navLinks">
+      <a href="#home" class="nav-link active" data-i18n="nav_home">Home</a>
+      <a href="#portfolio" class="nav-link" data-i18n="nav_portfolio">Portfolio</a>
+      <a href="#services" class="nav-link" data-i18n="nav_services">Services</a>
+      <a href="#contact" class="nav-link" data-i18n="nav_contact">Contact</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button class="lang-toggle" id="langToggle" aria-label="Switch language">EN / AR</button>
+      <button class="nav-burger" id="navBurger" aria-label="Open menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ============================== HERO ============================== -->
+<section class="hero" id="home">
+  <div class="container hero-inner">
+    <div class="eyebrow reveal"><i class="fa-solid fa-clapperboard"></i> <span data-i18n="hero_eyebrow">Video Editor &amp; AI Video Creator</span></div>
+    <h1 class="reveal">
+      <span data-i18n="hero_title_1">Crafting Stories That</span><br>
+      <span class="accent" data-i18n="hero_title_2">Move People.</span>
+    </h1>
+    <p class="subhead reveal" data-i18n="hero_subhead">Cinematic editing. AI-powered visuals. Content that stops the scroll.</p>
+    <p class="bio reveal" data-i18n="hero_bio">I'm Ahmed Ebrahim, a passionate Video Editor &amp; AI Content Creator. I transform ideas into compelling visual stories, helping brands and creators build a striking visual identity through dynamic editing, cinematic pacing, and cutting-edge AI video technology.</p>
+    <div class="cta-row reveal">
+      <a href="#portfolio" class="btn btn-primary"><i class="fa-solid fa-play"></i> <span data-i18n="cta_explore">Explore Work</span></a>
+      <a href="https://wa.me/000000000000" target="_blank" rel="noopener" class="btn btn-outline"><i class="fa-brands fa-whatsapp"></i> <span data-i18n="cta_whatsapp">Direct WhatsApp</span></a>
+    </div>
+  </div>
+  <div class="scroll-hint"><span data-i18n="scroll_hint">Scroll</span><div class="line"></div></div>
+</section>
+
+<!-- ============================== PORTFOLIO ============================== -->
+<section id="portfolio">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag" data-i18n="tag_work">Selected Work</span>
+      <h2 data-i18n="portfolio_title">Portfolio</h2>
+      <p data-i18n="portfolio_desc">A curated selection of edits, AI-generated visuals, and brand films.</p>
+    </div>
+
+    <div class="filters reveal">
+      <button class="filter-btn active" data-filter="all" data-i18n="filter_all">All</button>
+      <button class="filter-btn" data-filter="reels" data-i18n="filter_reels">Reels &amp; Shorts</button>
+      <button class="filter-btn" data-filter="youtube" data-i18n="filter_youtube">YouTube &amp; Long Form</button>
+      <button class="filter-btn" data-filter="ai" data-i18n="filter_ai">AI Videos &amp; Commercial Ads</button>
+    </div>
+
+    <div class="video-grid reveal" id="videoGrid">
+      <!-- Cards injected by JavaScript from the videos array -->
+    </div>
+  </div>
+</section>
+
+<!-- ============================== SERVICES ============================== -->
+<section id="services">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="tag" data-i18n="tag_services">What I Do</span>
+      <h2 data-i18n="services_title">Services</h2>
+      <p data-i18n="services_desc">End-to-end video production, from raw footage to AI-enhanced final cut.</p>
+    </div>
+
+    <div class="services-grid">
+      <div class="service-card reveal">
+        <div class="service-icon"><i class="fa-solid fa-mobile-screen-button"></i></div>
+        <h3 data-i18n="s1_title">Short-Form Content Editing</h3>
+        <p data-i18n="s1_desc">Reels, TikToks &amp; Shorts crafted with punchy motion graphics, dynamic subtitles, and scroll-stopping pacing.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><i class="fa-solid fa-youtube"></i></div>
+        <h3 data-i18n="s2_title">YouTube &amp; Long-Form Production</h3>
+        <p data-i18n="s2_desc">Full-length narrative editing, sound design and color grading built to keep viewers watching.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+        <h3 data-i18n="s3_title">AI Video Generation &amp; VFX</h3>
+        <p data-i18n="s3_desc">Cutting-edge AI tools combined with custom visual effects to create imagery that was never filmed.</p>
+      </div>
+      <div class="service-card reveal">
+        <div class="service-icon"><i class="fa-solid fa-fingerprint"></i></div>
+        <h3 data-i18n="s4_title">Visual Identity &amp; Brand Storytelling</h3>
+        <p data-i18n="s4_desc">A consistent, striking visual language that makes your brand instantly recognizable.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== CONTACT ============================== -->
+<section id="contact" class="contact-section">
+  <div class="container">
+    <div class="contact-box reveal">
+      <h2 data-i18n="contact_title">Let's Create Something Cinematic.</h2>
+      <p data-i18n="contact_desc">Have a project in mind? Send a message on WhatsApp and let's talk about your next video.</p>
+      <a href="https://wa.me/000000000000" target="_blank" rel="noopener" class="btn-whatsapp">
+        <i class="fa-brands fa-whatsapp"></i> <span data-i18n="contact_btn">Chat on WhatsApp</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== FOOTER ============================== -->
+<footer class="footer container">
+  <div class="f-brand">AHMED <span>EBRAHIM</span></div>
+  <div class="social-links">
+    <a href="#" target="_blank" rel="noopener" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+    <a href="#" target="_blank" rel="noopener" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+    <a href="#" target="_blank" rel="noopener" aria-label="LinkedIn"><i class="fa-brands fa-linkedin-in"></i></a>
+    <a href="#" target="_blank" rel="noopener" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+  </div>
+  <div class="copyright" data-i18n="footer_copy">© 2026 Ahmed Ebrahim. All rights reserved.</div>
+</footer>
+
+<!-- ============================== VIDEO MODAL ============================== -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose" aria-label="Close video"><i class="fa-solid fa-xmark"></i></button>
+    <div class="modal-frame-wrap">
+      <iframe id="modalIframe" src="" title="Video player" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ==========================================================================
+   VIDEOS DATA
+   Add new work by pushing a new object into this array.
+   category must be one of: "reels" | "youtube" | "ai"
+   thumbnail auto-derives from YouTube if left empty.
+   ========================================================================== */
+const videos = [
+  { id: 1, title: "Dental Clinic Reel — Before & After",      category: "reels",   youtubeId: "dQw4w9WgXcQ" },
+  { id: 2, title: "Minimal Product Teaser",                    category: "reels",   youtubeId: "M7lc1UVf-VE" },
+  { id: 3, title: "High-Energy Fitness Short",                 category: "reels",   youtubeId: "ysz5S6PUM-U" },
+  { id: 4, title: "Founder Interview — Full Episode",          category: "youtube", youtubeId: "9bZkp7q19f0" },
+  { id: 5, title: "Travel Documentary — Episode 01",           category: "youtube", youtubeId: "kXYiU_JCYtU" },
+  { id: 6, title: "Brand Story: From Idea to Shelf",           category: "youtube", youtubeId: "tgbNymZ7vqY" },
+  { id: 7, title: "AI-Generated Commercial — Sneaker Drop",    category: "ai",      youtubeId: "aqz-KE-bpKQ" },
+  { id: 8, title: "Sci-Fi AI Visual Concept",                  category: "ai",      youtubeId: "LXb3EKWsInQ" },
+  { id: 9, title: "AI Ad Campaign — Perfume Launch",           category: "ai",      youtubeId: "e-ORhEE9VVg" }
+];
+
+/* ==========================================================================
+   TRANSLATIONS
+   ========================================================================== */
+const translations = {
+  en: {
+    nav_home: "Home", nav_portfolio: "Portfolio", nav_services: "Services", nav_contact: "Contact",
+    hero_eyebrow: "Video Editor & AI Video Creator",
+    hero_title_1: "Crafting Stories That", hero_title_2: "Move People.",
+    hero_subhead: "Cinematic editing. AI-powered visuals. Content that stops the scroll.",
+    hero_bio: "I\u2019m Ahmed Ebrahim, a passionate Video Editor & AI Content Creator. I transform ideas into compelling visual stories, helping brands and creators build a striking visual identity through dynamic editing, cinematic pacing, and cutting-edge AI video technology.",
+    cta_explore: "Explore Work", cta_whatsapp: "Direct WhatsApp", scroll_hint: "Scroll",
+    tag_work: "Selected Work", portfolio_title: "Portfolio",
+    portfolio_desc: "A curated selection of edits, AI-generated visuals, and brand films.",
+    filter_all: "All", filter_reels: "Reels & Shorts", filter_youtube: "YouTube & Long Form", filter_ai: "AI Videos & Commercial Ads",
+    tag_services: "What I Do", services_title: "Services",
+    services_desc: "End-to-end video production, from raw footage to AI-enhanced final cut.",
+    s1_title: "Short-Form Content Editing",
+    s1_desc: "Reels, TikToks & Shorts crafted with punchy motion graphics, dynamic subtitles, and scroll-stopping pacing.",
+    s2_title: "YouTube & Long-Form Production",
+    s2_desc: "Full-length narrative editing, sound design and color grading built to keep viewers watching.",
+    s3_title: "AI Video Generation & VFX",
+    s3_desc: "Cutting-edge AI tools combined with custom visual effects to create imagery that was never filmed.",
+    s4_title: "Visual Identity & Brand Storytelling",
+    s4_desc: "A consistent, striking visual language that makes your brand instantly recognizable.",
+    contact_title: "Let's Create Something Cinematic.",
+    contact_desc: "Have a project in mind? Send a message on WhatsApp and let's talk about your next video.",
+    contact_btn: "Chat on WhatsApp",
+    footer_copy: "\u00A9 2026 Ahmed Ebrahim. All rights reserved.",
+    cat_reels: "Reels & Shorts", cat_youtube: "YouTube", cat_ai: "AI Video"
+  },
+  ar: {
+    nav_home: "الرئيسية", nav_portfolio: "الأعمال", nav_services: "الخدمات", nav_contact: "تواصل",
+    hero_eyebrow: "محرر فيديو وصانع محتوى بالذكاء الاصطناعي",
+    hero_title_1: "أصنع قصصًا", hero_title_2: "تلامس الناس.",
+    hero_subhead: "مونتاج سينمائي. مرئيات مدعومة بالذكاء الاصطناعي. محتوى يوقف المتابع عن التمرير.",
+    hero_bio: "أنا أحمد إبراهيم، مخرج ومحرر فيديوهات وصانع محتوى بالذكاء الاصطناعي. أساعد أصحاب الأعمال وصناع المحتوى على بناء هوية بصرية ساحرة، من خلال دمج فن المونتاج السينمائي بأحدث تقنيات الذكاء الاصطناعي.",
+    cta_explore: "استعرض الأعمال", cta_whatsapp: "تواصل عبر واتساب", scroll_hint: "مرر للأسفل",
+    tag_work: "أعمال مختارة", portfolio_title: "الأعمال",
+    portfolio_desc: "مجموعة مختارة من مقاطع المونتاج والمرئيات المولّدة بالذكاء الاصطناعي وأفلام العلامات التجارية.",
+    filter_all: "الكل", filter_reels: "ريلز وفيديوهات قصيرة", filter_youtube: "يوتيوب وفيديوهات طويلة", filter_ai: "فيديوهات وإعلانات بالذكاء الاصطناعي",
+    tag_services: "ماذا أقدم", services_title: "الخدمات",
+    services_desc: "إنتاج فيديو متكامل، من اللقطات الخام إلى النسخة النهائية المعزّزة بالذكاء الاصطناعي.",
+    s1_title: "مونتاج المحتوى القصير",
+    s1_desc: "ريلز وتيك توك وفيديوهات قصيرة بموشن جرافيك جذاب وترجمة ديناميكية وإيقاع يوقف المتابع.",
+    s2_title: "إنتاج فيديوهات يوتيوب والطويلة",
+    s2_desc: "مونتاج سردي كامل، تصميم صوت، وتصحيح ألوان يبقي المشاهد متابعًا حتى النهاية.",
+    s3_title: "توليد فيديو بالذكاء الاصطناعي ومؤثرات بصرية",
+    s3_desc: "أحدث أدوات الذكاء الاصطناعي مع مؤثرات بصرية مخصصة لصناعة مشاهد لم تُصوَّر أبدًا.",
+    s4_title: "الهوية البصرية وسرد قصة العلامة التجارية",
+    s4_desc: "لغة بصرية ثابتة ومميزة تجعل علامتك التجارية لا تُنسى.",
+    contact_title: "لنصنع شيئًا سينمائيًا معًا.",
+    contact_desc: "لديك مشروع في ذهنك؟ راسلني عبر واتساب ولنتحدث عن فيديوك القادم.",
+    contact_btn: "تواصل عبر واتساب",
+    footer_copy: "© 2026 أحمد إبراهيم. جميع الحقوق محفوظة.",
+    cat_reels: "ريلز وقصير", cat_youtube: "يوتيوب", cat_ai: "فيديو ذكاء اصطناعي"
+  }
+};
+
+let currentLang = "en";
+
+/* ==========================================================================
+   RENDER VIDEO GRID
+   ========================================================================== */
+const grid = document.getElementById("videoGrid");
+
+function catLabelKey(cat){
+  return cat === "reels" ? "cat_reels" : cat === "youtube" ? "cat_youtube" : "cat_ai";
+}
+
+function renderVideos(){
+  grid.innerHTML = "";
+  videos.forEach(v => {
+    const thumb = v.thumbnail || `https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg`;
+    const card = document.createElement("div");
+    card.className = "video-card";
+    card.setAttribute("data-category", v.category);
+    card.setAttribute("data-youtube", v.youtubeId);
+    card.innerHTML = `
+      <div class="thumb-wrap">
+        <img src="${thumb}" alt="${v.title}" loading="lazy">
+        <span class="badge" data-i18n="${catLabelKey(v.category)}">${translations[currentLang][catLabelKey(v.category)]}</span>
+        <div class="play-btn"><i class="fa-solid fa-play"></i></div>
+      </div>
+      <div class="card-info">
+        <h4>${v.title}</h4>
+      </div>`;
+    card.addEventListener("click", () => openModal(v.youtubeId));
+    grid.appendChild(card);
+  });
+}
+renderVideos();
+
+/* ==========================================================================
+   FILTERING
+   ========================================================================== */
+const filterBtns = document.querySelectorAll(".filter-btn");
+filterBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filterBtns.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const filter = btn.getAttribute("data-filter");
+    document.querySelectorAll(".video-card").forEach(card => {
+      const match = filter === "all" || card.getAttribute("data-category") === filter;
+      card.classList.toggle("hidden", !match);
+    });
+  });
+});
+
+/* ==========================================================================
+   MODAL / LIGHTBOX
+   ========================================================================== */
+const modalOverlay = document.getElementById("modalOverlay");
+const modalIframe = document.getElementById("modalIframe");
+const modalClose = document.getElementById("modalClose");
+
+function openModal(youtubeId){
+  modalIframe.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`;
+  modalOverlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+function closeModal(){
+  modalOverlay.classList.remove("open");
+  modalIframe.src = "";
+  document.body.style.overflow = "";
+}
+modalClose.addEventListener("click", closeModal);
+modalOverlay.addEventListener("click", e => { if(e.target === modalOverlay) closeModal(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+/* ==========================================================================
+   LANGUAGE TOGGLE
+   ========================================================================== */
+const langToggle = document.getElementById("langToggle");
+const htmlEl = document.documentElement;
+
+function applyTranslations(){
+  const dict = translations[currentLang];
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    if(dict[key]) el.textContent = dict[key];
+  });
+}
+
+function setLanguage(lang){
+  currentLang = lang;
+  htmlEl.setAttribute("lang", lang);
+  htmlEl.setAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+  document.body.classList.toggle("lang-ar", lang === "ar");
+  langToggle.textContent = lang === "ar" ? "AR / EN" : "EN / AR";
+  applyTranslations();
+  renderVideos(); // re-render so category badges + click handlers stay in sync with language
+  // re-apply active filter state after re-render
+  const activeFilter = document.querySelector(".filter-btn.active").getAttribute("data-filter");
+  document.querySelectorAll(".video-card").forEach(card => {
+    const match = activeFilter === "all" || card.getAttribute("data-category") === activeFilter;
+    card.classList.toggle("hidden", !match);
+  });
+}
+
+langToggle.addEventListener("click", () => setLanguage(currentLang === "en" ? "ar" : "en"));
+
+/* ==========================================================================
+   NAVBAR: scroll state, mobile menu, active link
+   ========================================================================== */
+const navbar = document.getElementById("navbar");
+const navBurger = document.getElementById("navBurger");
+const navLinks = document.getElementById("navLinks");
+
+window.addEventListener("scroll", () => {
+  navbar.classList.toggle("scrolled", window.scrollY > 30);
+});
+
+navBurger.addEventListener("click", () => {
+  navBurger.classList.toggle("open");
+  navLinks.classList.toggle("open");
+});
+document.querySelectorAll(".nav-link").forEach(link => {
+  link.addEventListener("click", () => {
+    navBurger.classList.remove("open");
+    navLinks.classList.remove("open");
+  });
+});
+
+const sections = document.querySelectorAll("section[id]");
+const navAnchors = document.querySelectorAll(".nav-link");
+const navObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      navAnchors.forEach(a => a.classList.remove("active"));
+      const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+      if(active) active.classList.add("active");
+    }
+  });
+}, { rootMargin: "-45% 0px -50% 0px" });
+sections.forEach(sec => navObserver.observe(sec));
+
+/* ==========================================================================
+   SCROLL REVEAL ANIMATIONS
+   ========================================================================== */
+const revealObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if(entry.isIntersecting){
+      entry.target.classList.add("in");
+      revealObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.15 });
+document.querySelectorAll(".reveal").forEach(el => revealObserver.observe(el));
+
+// Re-observe service cards individually with slight stagger
+document.querySelectorAll(".service-card").forEach((el, i) => {
+  el.style.transitionDelay = `${i * 90}ms`;
+});
+</script>
+</body>
+</html>
